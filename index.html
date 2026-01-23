@@ -1,172 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Diet Planner</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<title>Smart Diet Planner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-    }
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    header {
-      background: #2e7d32;
-      color: #fff;
-      padding: 20px;
-      text-align: center;
-    }
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background: #f4f6f8;
+}
 
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-    }
+header {
+  background: linear-gradient(135deg,#2e7d32,#1b5e20);
+  color: white;
+  padding: 25px;
+  text-align: center;
+}
 
-    select {
-      padding: 10px;
-      font-size: 16px;
-      margin-bottom: 20px;
-    }
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-    }
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+}
 
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+h2 {
+  color: #2e7d32;
+}
 
-    .card h3 {
-      color: #2e7d32;
-      margin-top: 0;
-    }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 10px;
+}
 
-    .meta {
-      font-size: 14px;
-      color: #555;
-      margin-bottom: 10px;
-    }
+button {
+  padding: 10px 16px;
+  background: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
 
-    table {
-      width: 100%;
-      font-size: 14px;
-    }
+button.secondary {
+  background: #1565c0;
+}
 
-    td {
-      padding: 4px 0;
-    }
+input, select {
+  padding: 8px;
+  width: 100%;
+}
 
-    .badge {
-      display: inline-block;
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      margin: 3px;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-    footer {
-      text-align: center;
-      padding: 15px;
-      color: #666;
-    }
-  </style>
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background: #e8f5e9;
+}
+
+.hidden {
+  display: none;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+</style>
 </head>
 
 <body>
 
 <header>
-  <h1>🥗 Diet Planner</h1>
-  <p>Live nutrition data from Azure MySQL</p>
+  <h1>🥗 Smart Diet Planner</h1>
+  <p>Personalized weekly plans based on health & calories</p>
 </header>
 
 <div class="container">
 
-  <select id="mealFilter">
-    <option value="All">All Meals</option>
-    <option value="Breakfast">Breakfast</option>
-    <option value="Lunch">Lunch</option>
-    <option value="Snack">Snack</option>
-    <option value="Dinner">Dinner</option>
+<!-- LOGIN -->
+<div class="card" id="loginCard">
+  <h2>🔐 Login</h2>
+  <input id="email" placeholder="Enter email">
+  <br><br>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- MAIN -->
+<div id="mainApp" class="hidden">
+
+<!-- SETTINGS -->
+<div class="card">
+  <h2>⚙️ Preferences</h2>
+
+  <label>Calorie Limit</label>
+  <select id="calorieLimit">
+    <option value="1500">1500 kcal</option>
+    <option value="2000" selected>2000 kcal</option>
+    <option value="2500">2500 kcal</option>
   </select>
 
-  <div class="grid" id="dietGrid"></div>
+  <h3>Health Conditions</h3>
+  <div class="grid">
+    <label><input type="checkbox" value="diabetes"> Diabetes</label>
+    <label><input type="checkbox" value="bp"> BP</label>
+    <label><input type="checkbox" value="heart"> Heart</label>
+    <label><input type="checkbox" value="kidney"> Kidney</label>
+    <label><input type="checkbox" value="liver"> Liver</label>
+    <label><input type="checkbox" value="obesity"> Obesity</label>
+    <label><input type="checkbox" value="anemia"> Anemia</label>
+  </div>
+
+  <br>
+  <button onclick="generatePlan()">Generate Weekly Plan</button>
+  <button class="secondary" onclick="downloadPDF()">Download PDF</button>
+</div>
+
+<!-- WEEKLY PLAN -->
+<div class="card" id="plan">
+  <h2>📅 Weekly Diet Plan</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Breakfast</th>
+        <th>Lunch</th>
+        <th>Dinner</th>
+        <th>Snack</th>
+      </tr>
+    </thead>
+    <tbody id="planBody"></tbody>
+  </table>
+</div>
+
+<!-- ADMIN -->
+<div class="card">
+  <h2>🛠 Admin – Add Food</h2>
+
+  <div class="grid">
+    <input id="food" placeholder="Food Item">
+    <select id="meal">
+      <option>Breakfast</option>
+      <option>Lunch</option>
+      <option>Dinner</option>
+      <option>Snack</option>
+    </select>
+    <input id="cal" placeholder="Calories">
+  </div>
+
+  <br>
+  <button onclick="addFood()">Add Food</button>
+</div>
+
+</div>
 </div>
 
 <footer>
-  Diet Planner © 2026 | Azure Static Web App
+  Diet Planner © 2026 | Azure + MySQL
 </footer>
 
 <script>
-  // 🔴 PUT YOUR REAL BACKEND URL HERE
-  const API_URL = "https://diet-backend.azurewebsites.net/allDiet";
+const API = "https://YOUR-BACKEND-NAME.azurewebsites.net/allDiet";
+const POST_API = "https://YOUR-BACKEND-NAME.azurewebsites.net/addFood";
 
-  const grid = document.getElementById("dietGrid");
-  const filter = document.getElementById("mealFilter");
+let foods = [];
 
-  let diets = [];
+async function loadFoods() {
+  const r = await fetch(API);
+  foods = await r.json();
+}
 
-  async function loadDiets() {
-    try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("API error");
-      diets = await response.json();
-      render();
-    } catch (error) {
-      grid.innerHTML = "<p>❌ Failed to load diet data</p>";
-      console.error(error);
-    }
-  }
+function login() {
+  const email = document.getElementById("email").value;
+  if (!email) return alert("Enter email");
+  localStorage.setItem("user", email);
+  document.getElementById("loginCard").classList.add("hidden");
+  document.getElementById("mainApp").classList.remove("hidden");
+  loadFoods();
+}
 
-  function render() {
-    grid.innerHTML = "";
-    const meal = filter.value;
+function selectedConditions() {
+  return [...document.querySelectorAll('input[type=checkbox]:checked')]
+    .map(c => c.value);
+}
 
-    diets
-      .filter(d => meal === "All" || d.meal_type === meal)
-      .forEach(d => {
-        const card = document.createElement("div");
-        card.className = "card";
+function filterMeal(type) {
+  const conds = selectedConditions();
+  return foods.filter(f => {
+    if (f.meal_type !== type) return false;
+    return conds.every(c => f[`suitable_for_${c}`] === "Yes");
+  });
+}
 
-        card.innerHTML = `
-          <h3>${d.food_item}</h3>
-          <div class="meta">
-            ${d.meal_type} • ${d.calories_kcal || "-"} kcal
-          </div>
+function generatePlan() {
+  const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const body = document.getElementById("planBody");
+  body.innerHTML = "";
 
-          <table>
-            <tr><td>Protein</td><td>${d.protein_g ?? "-"}</td></tr>
-            <tr><td>Carbs</td><td>${d.carbohydrates_g ?? "-"}</td></tr>
-            <tr><td>Fats</td><td>${d.fats_g ?? "-"}</td></tr>
-          </table>
+  days.forEach(d => {
+    body.innerHTML += `
+      <tr>
+        <td>${d}</td>
+        <td>${pick("Breakfast")}</td>
+        <td>${pick("Lunch")}</td>
+        <td>${pick("Dinner")}</td>
+        <td>${pick("Snack")}</td>
+      </tr>`;
+  });
+}
 
-          <div>
-            ${badge(d.suitable_for_diabetes, "Diabetes")}
-            ${badge(d.suitable_for_bp, "BP")}
-            ${badge(d.suitable_for_heart, "Heart")}
-            ${badge(d.suitable_for_obesity, "Obesity")}
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-  }
+function pick(type) {
+  const list = filterMeal(type);
+  return list.length ? list[Math.floor(Math.random()*list.length)].food_item : "N/A";
+}
 
-  function badge(value, text) {
-    return value === "Yes" ? `<span class="badge">${text}</span>` : "";
-  }
+function downloadPDF() {
+  html2pdf().from(document.getElementById("plan")).save("Weekly_Diet_Plan.pdf");
+}
 
-  filter.addEventListener("change", render);
+async function addFood() {
+  const data = {
+    food_item: food.value,
+    meal_type: meal.value,
+    calories_kcal: cal.value
+  };
+  await fetch(POST_API, {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(data)
+  });
+  alert("Food added");
+  loadFoods();
+}
 
-  loadDiets();
+if (localStorage.getItem("user")) login();
 </script>
 
 </body>
