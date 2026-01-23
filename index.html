@@ -36,9 +36,7 @@ header {
   box-shadow: 0 8px 20px rgba(0,0,0,.08);
 }
 
-h2 {
-  color: #2e7d32;
-}
+h2 { color: #2e7d32; }
 
 .grid {
   display: grid;
@@ -55,9 +53,7 @@ button {
   cursor: pointer;
 }
 
-button.secondary {
-  background: #1565c0;
-}
+button.secondary { background: #1565c0; }
 
 input, select {
   padding: 8px;
@@ -75,13 +71,7 @@ th, td {
   text-align: center;
 }
 
-th {
-  background: #e8f5e9;
-}
-
-.hidden {
-  display: none;
-}
+th { background: #e8f5e9; }
 
 footer {
   text-align: center;
@@ -95,21 +85,10 @@ footer {
 
 <header>
   <h1>🥗 Smart Diet Planner</h1>
-  <p>Personalized weekly plans based on health & calories</p>
+  <p>Personalized weekly diet plans</p>
 </header>
 
 <div class="container">
-
-<!-- LOGIN -->
-<div class="card" id="loginCard">
-  <h2>🔐 Login</h2>
-  <input id="email" placeholder="Enter email">
-  <br><br>
-  <button onclick="login()">Login</button>
-</div>
-
-<!-- MAIN -->
-<div id="mainApp" class="hidden">
 
 <!-- SETTINGS -->
 <div class="card">
@@ -141,7 +120,6 @@ footer {
 <!-- WEEKLY PLAN -->
 <div class="card" id="plan">
   <h2>📅 Weekly Diet Plan</h2>
-
   <table>
     <thead>
       <tr>
@@ -176,45 +154,39 @@ footer {
 </div>
 
 </div>
-</div>
 
 <footer>
-  Diet Planner © 2026 | Azure + MySQL
+  Diet Planner © 2026 | Azure Static Web App
 </footer>
 
 <script>
-const API = "https://diet-backend.azurewebsites.net/allDiet";
-const POST_API = "https://diet-backend.azurewebsites.net/addFood";
+// 🔥 BACKEND BASE URL (ONLY CHANGE THIS IF BACKEND NAME CHANGES)
+const API_BASE = "https://diet-backend.azurewebsites.net";
 
 let foods = [];
 
+// Load foods from backend
 async function loadFoods() {
-  const r = await fetch(API);
-  foods = await r.json();
+  const res = await fetch(`${API_BASE}/allDiet`);
+  foods = await res.json();
 }
 
-function login() {
-  const email = document.getElementById("email").value;
-  if (!email) return alert("Enter email");
-  localStorage.setItem("user", email);
-  document.getElementById("loginCard").classList.add("hidden");
-  document.getElementById("mainApp").classList.remove("hidden");
-  loadFoods();
-}
-
+// Selected conditions
 function selectedConditions() {
   return [...document.querySelectorAll('input[type=checkbox]:checked')]
     .map(c => c.value);
 }
 
+// Filter meals
 function filterMeal(type) {
   const conds = selectedConditions();
-  return foods.filter(f => {
-    if (f.meal_type !== type) return false;
-    return conds.every(c => f[`suitable_for_${c}`] === "Yes");
-  });
+  return foods.filter(f =>
+    f.meal_type === type &&
+    conds.every(c => f[`suitable_for_${c}`] === "Yes")
+  );
 }
 
+// Generate plan
 function generatePlan() {
   const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
   const body = document.getElementById("planBody");
@@ -237,26 +209,31 @@ function pick(type) {
   return list.length ? list[Math.floor(Math.random()*list.length)].food_item : "N/A";
 }
 
+// PDF
 function downloadPDF() {
   html2pdf().from(document.getElementById("plan")).save("Weekly_Diet_Plan.pdf");
 }
 
+// Add food
 async function addFood() {
   const data = {
     food_item: food.value,
     meal_type: meal.value,
     calories_kcal: cal.value
   };
-  await fetch(POST_API, {
+
+  await fetch(`${API_BASE}/addFood`, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify(data)
   });
-  alert("Food added");
+
+  alert("Food added successfully");
   loadFoods();
 }
 
-if (localStorage.getItem("user")) login();
+// Auto load
+loadFoods();
 </script>
 
 </body>
