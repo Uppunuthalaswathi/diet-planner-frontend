@@ -222,7 +222,7 @@ async function addFood() {
     calories_kcal: cal.value
   };
 
-  await fetch(`${API_BASE}/addFood`, {
+  await fetch(`${API_BASE}/diet`, {
     method: "POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify(data)
